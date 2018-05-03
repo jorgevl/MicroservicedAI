@@ -1,26 +1,21 @@
 package com.tryjorgecatch.microserviceaicore;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.RequestEntity;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import com.google.gson.Gson;
+
 
 @SpringBootApplication
 public class MicroserviceAiCoreApplication {
 
 	public static void main(String[] args) {
-
+		
 	    Map<String, Object> request = new HashMap<>();
 	    
 	    List<Double> indiv = new ArrayList<>();
@@ -45,4 +40,6 @@ public class MicroserviceAiCoreApplication {
 	    	System.out.println(gen);
 	    
 	}
+
+
 }
