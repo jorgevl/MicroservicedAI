@@ -1,5 +1,8 @@
 package com.tryjorgecatch.microserviceaicore.genetics;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class Individual implements Comparable<Individual>{
@@ -31,4 +34,15 @@ public class Individual implements Comparable<Individual>{
 			return 1;
 	}
 
+	public Individual clone() {
+		Individual ret = new Individual();
+		ret.setFitness(fitness.doubleValue());
+		List<Double> clonedGenes = new ArrayList<>(genes.size());
+		for(Double gen : genes)
+			clonedGenes.add(gen.doubleValue());
+		ret.setGenes(clonedGenes);
+		
+		return ret;
+	}
+	
 }

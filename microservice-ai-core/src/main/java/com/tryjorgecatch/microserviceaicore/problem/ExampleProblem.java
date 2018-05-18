@@ -28,13 +28,17 @@ public class ExampleProblem extends Problem {
 	public Double fitnessFunction(List<Individual> population) {
 		
 		Double totalFitness = 0.0;
+		Double bestInd = Double.MAX_VALUE;
 		
 		for(Individual individual : population) {
 			Double fitness = evaluate(individual);
+			if(fitness < bestInd)
+				bestInd = fitness;
 			individual.setFitness(fitness);
 			totalFitness += fitness;
 		}
 		
+		System.out.println("Mejor fitness: " + bestInd);
 		return totalFitness / population.size();
 		
 	}

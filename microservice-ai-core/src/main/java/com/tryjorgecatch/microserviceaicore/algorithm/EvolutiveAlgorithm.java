@@ -37,7 +37,7 @@ public class EvolutiveAlgorithm {
 		eliteSize = 5;
 		iterations = 100;
 		crossChance = 0.6;
-		mutationChance = 0.05;
+		mutationChance = 0.3;
 		problem = new ExampleProblem();
 	}
 
@@ -58,17 +58,30 @@ public class EvolutiveAlgorithm {
 	}
 
 	private void mutatePopulation(List<Individual> population) {
-		Random rGen = new Random();
-		
-		for(Individual individual : population) {
-			if(rGen.nextDouble() < mutationChance) {
-				mutateIndividual(individual);
-			}
-		}
+		for(int i = eliteSize; i < population.size(); i++)
+			mutateIndividual(population.get(i));
 	}
 
+	@SuppressWarnings("unchecked")
 	private void mutateIndividual(Individual individual) {
-		// TODO: Call the microservice here, replace the individual with the response
+		Map<String, Object> request = new HashMap<>();
+	    
+	    request.put("ind", individual.getGenes());
+	    request.put("mutationChance", mutationChance);
+	    request.put("initRanges", problem.getInitRanges());
+	    request.put("endRanges", problem.getEndRanges());
+	    
+	    Gson gson = new Gson();
+
+	    RestTemplate restTemplate = new RestTemplate();
+
+	    String jsonResponse = restTemplate.postForObject("http://localhost:8082/MService", gson.toJson(request), String.class);
+	    
+	    Map<String, Object> response = gson.fromJson(jsonResponse, Map.class);
+
+	    List<Double> modifiedInd = (List<Double>) response.get("ind");
+	   
+	    individual.setGenes(modifiedInd);
 	}
 
 	private void crossPopulation(List<Individual> population) {
@@ -101,7 +114,7 @@ public class EvolutiveAlgorithm {
 
 	private void saveElite(List<Individual> population, List<Individual> newPopulation) {
 		for(int i = 0; i < eliteSize; i++)
-			newPopulation.add(population.get(i));
+			newPopulation.add(population.get(i).clone());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -110,7 +123,6 @@ public class EvolutiveAlgorithm {
 	    
 	    request.put("indOne", crossIndOne.getGenes());
 	    request.put("indTwo", crossIndTwo.getGenes());
-	    request.put("crossChance", crossChance);
 	    
 	    Gson gson = new Gson();
 
@@ -148,7 +160,7 @@ public class EvolutiveAlgorithm {
 			selectedIndex = halfPop + rGen.nextInt(popSize - halfPop);
 			
 				
-		return population.get(selectedIndex);
+		return population.get(selectedIndex).clone();
 	}
 
 	private void evaluatePopulation(List<Individual> population) {

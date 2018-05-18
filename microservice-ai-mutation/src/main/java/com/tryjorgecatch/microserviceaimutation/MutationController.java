@@ -1,4 +1,4 @@
-package com.tryjorgecatch.microserviceaicross;
+package com.tryjorgecatch.microserviceaimutation;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,52 +17,50 @@ import com.google.gson.Gson;
 
 @SuppressWarnings("unchecked")
 @RestController
-public class CrossController {
+public class MutationController {
 
-	  @RequestMapping(value = "/XService", method = RequestMethod.POST)
+	@RequestMapping(value = "/MService", method = RequestMethod.POST)
 	public ResponseEntity<String> crossGenes(@RequestBody String params) {
 
 		Gson gson = new Gson();
 
 		Map<String, Object> paramMap = gson.fromJson(params, Map.class);
 
-		List<Double> indOne = (List<Double>) paramMap.get("indOne");
-		List<Double> indTwo = (List<Double>) paramMap.get("indTwo");
+		List<Double> ind = (List<Double>) paramMap.get("ind");
+		List<Double> initRanges = (List<Double>) paramMap.get("initRanges");
+		List<Double> endRanges = (List<Double>) paramMap.get("endRanges");
+		Double mutationChance = (Double) paramMap.get("mutationChance");
 
-		if (indOne != null && indTwo != null) {
+		if (ind != null && initRanges != null && endRanges != null) {
 
 			Random rGen = new Random();
 
-			if (indOne.size() == indTwo.size()) {
-				Integer crossPoint;
-				crossPoint = rGen.nextInt(indOne.size());
+			Double coin;
 
-				for (int i = crossPoint; i < indOne.size(); i++) {
-					MutableDouble genOne = new MutableDouble(indOne.get(i));
-					MutableDouble genTwo = new MutableDouble(indTwo.get(i));
-					
-					swapGenes(genOne, genTwo);
-				
-					indOne.set(i, genOne.getValue());
-					indTwo.set(i, genTwo.getValue());
+			for (int i = 0; i < ind.size(); i++) {
+				coin = rGen.nextDouble();
+
+				if (coin < mutationChance) {
+					MutableDouble gen = new MutableDouble(ind.get(i));
+					mutaGen(gen, initRanges.get(i), endRanges.get(i));
+					ind.set(i, gen.doubleValue());
 				}
 			}
 
 			Map<String, Object> response = new HashMap<>();
 
-			response.put("indOne", indOne);
-			response.put("indTwo", indTwo);
+			response.put("ind", ind);
 
 			return new ResponseEntity<String>(gson.toJson(response, Map.class), HttpStatus.OK);
 		} else
 			return new ResponseEntity<String>(HttpStatus.EXPECTATION_FAILED);
 	}
+
+	private void mutaGen(MutableDouble gen, Double min, Double max) {
+		Random rGen = new Random();
+		
+		gen.setValue(min + (max - min) * rGen.nextDouble());
+	}
 	  
-	  private void swapGenes(MutableDouble genOne, MutableDouble genTwo) {
-		  Double t = genOne.getValue();
-		  genOne.setValue(genTwo.getValue());
-		  genTwo.setValue(t);
-		  
-	  }
 	
 }
