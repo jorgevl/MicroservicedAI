@@ -2,26 +2,43 @@ package com.tryjorgecatch.microserviceaicore.algorithm;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
+import org.springframework.web.client.RestTemplate;
+
+import com.google.gson.Gson;
 import com.tryjorgecatch.microserviceaicore.genetics.Individual;
 import com.tryjorgecatch.microserviceaicore.problem.ExampleProblem;
 import com.tryjorgecatch.microserviceaicore.problem.Problem;
 
 public class EvolutiveAlgorithm {
-	private static final Integer popSize = 100;
-	private static final Integer iterations = 100;
-	private static final Double crossChance = 0.6;
-	private static final Double mutationChance = 0.05;
-	private static final Problem problem = new ExampleProblem();
-
+	private Integer popSize;
+	private Integer eliteSize;
+	private Integer iterations;
+	private Double crossChance;
+	private Double mutationChance;
+	private Problem problem;
+	
 	public void start() {
+		config();
+		
 		List<Individual> population = new ArrayList<>(popSize);
 
 		generateStartingPop(population);
 		iterate(population);
 		showResults(population);
+	}
+
+	private void config() {
+		popSize = 100;
+		eliteSize = 5;
+		iterations = 100;
+		crossChance = 0.6;
+		mutationChance = 0.05;
+		problem = new ExampleProblem();
 	}
 
 	private void showResults(List<Individual> population) {
@@ -57,13 +74,18 @@ public class EvolutiveAlgorithm {
 	private void crossPopulation(List<Individual> population) {
 		Random rGen = new Random();
 		
+		Collections.sort(population);
+		
 		List<Individual> newPopulation = new ArrayList<Individual>(popSize);
+		
+		saveElite(population, newPopulation);
+		
 		while(newPopulation.size() < popSize) {
 			Individual crossIndOne = selectIndividualToCross(population);
 			Individual crossIndTwo = selectIndividualToCross(population);
 			
 			if(rGen.nextDouble() < crossChance) {
-				// TODO: Call the microservice here, add the response to the new population
+				crossIndividuals(crossIndOne, crossIndTwo);
 			}
 			else {
 				newPopulation.add(crossIndOne);
@@ -77,6 +99,34 @@ public class EvolutiveAlgorithm {
 		population = newPopulation;
 	}
 
+	private void saveElite(List<Individual> population, List<Individual> newPopulation) {
+		for(int i = 0; i < eliteSize; i++)
+			newPopulation.add(population.get(i));
+	}
+
+	@SuppressWarnings("unchecked")
+	private void crossIndividuals(Individual crossIndOne, Individual crossIndTwo) {
+		Map<String, Object> request = new HashMap<>();
+	    
+	    request.put("indOne", crossIndOne.getGenes());
+	    request.put("indTwo", crossIndTwo.getGenes());
+	    request.put("crossChance", crossChance);
+	    
+	    Gson gson = new Gson();
+
+	    RestTemplate restTemplate = new RestTemplate();
+
+	    String jsonResponse = restTemplate.postForObject("http://localhost:8081/XService", gson.toJson(request), String.class);
+	    
+	    Map<String, Object> response = gson.fromJson(jsonResponse, Map.class);
+
+	    List<Double> modifiedIndOne = (List<Double>) response.get("indOne");
+		List<Double> modifiedIndTwo = (List<Double>) response.get("indTwo");
+	   
+	    crossIndOne.setGenes(modifiedIndOne);
+	    crossIndTwo.setGenes(modifiedIndTwo);
+	}
+
 	private Individual selectIndividualToCross(List<Individual> population) {
 		
 		Random rGen = new Random();
@@ -87,17 +137,16 @@ public class EvolutiveAlgorithm {
 			halfPop = popSize / 2;
 		else
 			halfPop = popSize / 2 + 1;
-		
-		Collections.sort(population);
-		
+
 		Double coin = rGen.nextDouble();
 		
 		//Best 50 per cent fitnesses have 75 per cent chance to be picked
 		Integer selectedIndex;
 		if(coin < 0.75)
-			selectedIndex = halfPop + rGen.nextInt(popSize - halfPop);
-		else 
 			selectedIndex = rGen.nextInt(halfPop);
+		else 
+			selectedIndex = halfPop + rGen.nextInt(popSize - halfPop);
+			
 				
 		return population.get(selectedIndex);
 	}

@@ -1,5 +1,6 @@
 package com.tryjorgecatch.microserviceaicore.problem;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.tryjorgecatch.microserviceaicore.genetics.Individual;
@@ -11,6 +12,9 @@ public class ExampleProblem extends Problem {
 		this.setNumVars(2);
 		
 		this.setPerfection(-186.7309);
+		
+		this.setInitRanges(new ArrayList<Double>());
+		this.setEndRanges(new ArrayList<Double>());
 		
 		this.getInitRanges().add(-10.0);
 		this.getEndRanges().add(10.0);
@@ -55,7 +59,7 @@ public class ExampleProblem extends Problem {
 			sum2 += i*Math.cos((i+1)*yValue + i);
 		}
 		
-		return sum1*sum2;
+		return Math.abs(getPerfection() - (sum1*sum2));
 	}
 
 	@Override
